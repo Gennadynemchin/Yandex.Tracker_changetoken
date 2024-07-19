@@ -36,10 +36,11 @@ def edit_trigger(token, orgid, triggers):
                 print("Token has not been found in headers")    
             actions.append(action)
         data = json.dumps({"actions": actions})
-        print(f"DATA: {data}\n")
         headers = {"X-Cloud-Org-Id": f"{orgid}", "Authorization": f"OAuth {token}"}
         response = requests.patch(f"https://api.tracker.yandex.net/v2/queues/{queue}/triggers/{triggerid}?version={triggerversion}", headers=headers, data=data)
+        return response.status_code
+    
 
-
-triggers_for_edit = get_triggers(token, orgid, queue)
-edit_trigger(token, orgid, triggers_for_edit)
+if __name__ == "__main__":
+    triggers_for_edit = get_triggers(token, orgid, queue)
+    edit_trigger(token, orgid, triggers_for_edit)
