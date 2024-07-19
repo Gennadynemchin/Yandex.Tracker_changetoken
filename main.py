@@ -9,6 +9,7 @@ load_dotenv()
 orgid = os.environ["ORGID"]
 token = os.environ["TOKEN"]
 queue = os.environ["QUEUE"]
+new_token = os.environ["NEWTOKEN"]
 
 
 def get_triggers(token, orgid, queue):
@@ -23,7 +24,7 @@ def get_triggers(token, orgid, queue):
     return stored_triggers
 
 
-def edit_trigger(token, orgid, triggers):
+def edit_trigger(token, orgid, triggers, new_token):
     for trigger in triggers:
         triggerid = trigger["id"]
         triggerversion = trigger["version"]
@@ -31,7 +32,7 @@ def edit_trigger(token, orgid, triggers):
         actions = []
         for action in triggeractions:
             try:
-                action["headers"]["Authorization"] = "TOKEN FOR REPLACE"
+                action["headers"]["Authorization"] = new_token
             except KeyError:
                 print("Token has not been found in headers")    
             actions.append(action)
