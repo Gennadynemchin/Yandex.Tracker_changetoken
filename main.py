@@ -38,16 +38,16 @@ def edit_trigger(token, orgid, triggers, new_token, prefix):
         actions = []
         for action in triggeractions:
             try:
-                token = action["headers"]["Authorization"]
-                token = f"{prefix} {new_token}"
+                old_token = action["headers"]["Authorization"]
+                old_tokentoken = f"{prefix} {new_token}"
                 message = f"Trigger ID {triggerid} - token found in headers"
                 logger.info("%s", message)
             except KeyError:
                 message = f"Trigger ID {triggerid} - token has not been found in headers"
                 logger.error("%s", message)
             try:
-                token = action["authContext"]["accessToken"]
-                token = new_token
+                old_token = action["authContext"]["accessToken"]
+                old_token = new_token
                 message = f"Trigger ID {triggerid} - token found in authContext"
                 logger.info("%s", message)
             except KeyError:
