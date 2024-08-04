@@ -39,7 +39,7 @@ def edit_trigger(token, orgid, triggers, new_token, prefix):
         for action in triggeractions:
             try:
                 old_token = action["headers"]["Authorization"]
-                old_tokentoken = f"{prefix} {new_token}"
+                old_token = f"{prefix} {new_token}"
                 message = f"Trigger ID {triggerid} - token found in headers"
                 logger.info("%s", message)
             except KeyError:
