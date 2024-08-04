@@ -3,7 +3,7 @@ import sys
 import json
 import requests
 from dotenv import load_dotenv
-from logging import getLogger, basicConfig, FileHandler, StreamHandler, DEBUG, ERROR, INFO
+from logging import getLogger, basicConfig, FileHandler, StreamHandler, INFO
 
 
 load_dotenv()
@@ -16,8 +16,8 @@ stream.setLevel(INFO)
 basicConfig(level=INFO, format=FORMAT, handlers=[file_handler, stream])
 
 
-def get_triggers(token, orgid, queue):
-    headers = {"X-Cloud-Org-Id": f"{orgid}", "Authorization": f"OAuth {token}"}
+def get_triggers(token, orgid, orgheader, queue):
+    headers = {orgheader: orgid, "Authorization": f"OAuth {token}"}
     response = requests.get(
         f"https://api.tracker.yandex.net/v2/queues/{queue}/triggers", headers=headers
     )
@@ -30,7 +30,7 @@ def get_triggers(token, orgid, queue):
     return stored_triggers
 
 
-def edit_trigger(token, orgid, triggers, new_token, prefix):
+def edit_trigger(token, orgid, orgheader, triggers, new_token, prefix):
     for trigger in triggers:
         triggerid = trigger["id"]
         triggerversion = trigger["version"]
@@ -38,24 +38,25 @@ def edit_trigger(token, orgid, triggers, new_token, prefix):
         actions = []
         for action in triggeractions:
             try:
-                old_token = action["headers"]["Authorization"]
-                old_token = f"{prefix} {new_token}"
+                action["headers"].update({"Authorization": f"{prefix} {new_token}"})
                 message = f"Trigger ID {triggerid} - token found in headers"
                 logger.info("%s", message)
             except KeyError:
-                message = f"Trigger ID {triggerid} - token has not been found in headers"
-                logger.error("%s", message)
-            try:
-                old_token = action["authContext"]["accessToken"]
-                old_token = new_token
+                message = (
+                    f"Trigger ID {triggerid} - token has not been found in headers"
+                )
+                logger.warning("%s", message)
+            if action["authContext"].get("accessToken"):
                 message = f"Trigger ID {triggerid} - token found in authContext"
                 logger.info("%s", message)
-            except KeyError:
-                message = f"Trigger ID {triggerid} - token has not been found in authContext"
-                logger.error("%s", message)
+            else:
+                message = (
+                    f"Trigger ID {triggerid} - token has not been found in authContext"
+                )
+                logger.warning("%s", message)
             actions.append(action)
         data = json.dumps({"actions": actions})
-        headers = {"X-Cloud-Org-Id": f"{orgid}", "Authorization": f"OAuth {token}"}
+        headers = {orgheader: orgid, "Authorization": f"OAuth {token}"}
         if len(sys.argv) > 1 and sys.argv[1] == "--force":
             response = requests.patch(
                 f"https://api.tracker.yandex.net/v2/queues/{queue}/triggers/{triggerid}?version={triggerversion}",
@@ -63,18 +64,19 @@ def edit_trigger(token, orgid, triggers, new_token, prefix):
                 data=data,
             )
             message = f"Server answered: {response.json()}"
-            logger.info("%s", message)
-            return response.json()
+            return logger.info("%s", message)
         else:
-            return data
+            message = f"Actions would be replaced: {data}"
+            return logger.info("%s", message)
 
 
 if __name__ == "__main__":
     orgid = os.environ["ORGID"]
+    orgheader = os.environ["ORG_HEADER"]
     token = os.environ["TOKEN"]
     queue = os.environ["QUEUE"]
     new_token = os.environ["NEWTOKEN"]
     prefix = os.environ["PREFIX"]
 
-    triggers_for_edit = get_triggers(token, orgid, queue)
-    edit_trigger(token, orgid, triggers_for_edit, new_token, prefix)
+    triggers_for_edit = get_triggers(token, orgid, orgheader, queue)
+    edit_trigger(token, orgid, orgheader, triggers_for_edit, new_token, prefix)
