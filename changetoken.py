@@ -46,10 +46,12 @@ def edit_trigger(token, orgid, orgheader, triggers, new_token, prefix):
                     f"Trigger ID {triggerid} - token has not been found in headers"
                 )
                 logger.warning("%s", message)
-            if action["authContext"].get("accessToken"):
+            try:
+                action["authContext"]["accessToken"]
+                action["authContext"]["accessToken"] = new_token
                 message = f"Trigger ID {triggerid} - token found in authContext"
                 logger.info("%s", message)
-            else:
+            except KeyError:
                 message = (
                     f"Trigger ID {triggerid} - token has not been found in authContext"
                 )
