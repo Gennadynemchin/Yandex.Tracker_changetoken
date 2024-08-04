@@ -40,18 +40,19 @@ def edit_trigger(token, orgid, triggers, new_token, prefix):
             try:
                 token = action["headers"]["Authorization"]
                 token = f"{prefix} {new_token}"
-                logger.info("%s", "Token found in headers")
+                message = f"Trigger ID {triggerid} - token found in headers"
+                logger.info("%s", message)
             except KeyError:
-                logger.error("%s", "Token has not been found in headers")
+                message = f"Trigger ID {triggerid} - token has not been found in headers"
+                logger.error("%s", message)
             try:
                 token = action["authContext"]["accessToken"]
                 token = new_token
-                logger.info("%s", "Token found in authContext")
+                message = f"Trigger ID {triggerid} - token found in authContext"
+                logger.info("%s", message)
             except KeyError:
-                logger.error("%s", "Token has not been found even in authContext")
-            message = f"Found trigger {action["id"]}"
-            logger.info("%s", message)
-            print(action)
+                message = f"Trigger ID {triggerid} - token has not been found in authContext"
+                logger.error("%s", message)
             actions.append(action)
         data = json.dumps({"actions": actions})
         headers = {"X-Cloud-Org-Id": f"{orgid}", "Authorization": f"OAuth {token}"}
@@ -61,6 +62,8 @@ def edit_trigger(token, orgid, triggers, new_token, prefix):
                 headers=headers,
                 data=data,
             )
+            message = f"Server answered: {response.json()}"
+            logger.info("%s", message)
             return response.json()
         else:
             return data
